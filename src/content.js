@@ -1,16 +1,7 @@
 import React from "react";
 import styled from "styled-components";
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-const ContentDiv = styled.div`
-  height: calc(100vh - 100px);
-  margin: 0;
-  display: flex;
-  background: url(https://www.weekendnotes.com/im/002/05/storming-troopers1.jpg);
-  background-size: 100% 100%;
-  ul {
-    height: 100%;
-  }
-`;
 const ListContent = styled.ul`
   display: flex;
   flex-direction: column;
@@ -40,11 +31,22 @@ const ListContent = styled.ul`
 `;
 const NavigLinkLi = styled.li`
   display: flex;
-  button {
-    border: none;
-    flex-grow: 1;
-    justify-content: center;
-    color: #000;
+`;
+const LinkPages = styled(Link)`
+  cursor: pointer;
+  height: inherit;
+  display: flex;
+  align-items: center;
+  background-color: #255070cc;
+  text-align: center;
+  padding: 0 10px;
+  width: 100%;
+  flex-grow: 1;
+  justify-content: center;
+  color: #000;
+  &:hover {
+    background-color: #505050;
+    color: #00a4ff;
   }
 `;
 const Info = styled.table`
@@ -69,9 +71,10 @@ const Info = styled.table`
 `;
 
 class Content extends React.Component {
+  getUpdate = async url => await this.props.getFields("objOfContentList", url);
   render() {
     return (
-      <ContentDiv>
+      <>
         {this.props.contentHide && (
           <>
             <ListContent>
@@ -85,21 +88,35 @@ class Content extends React.Component {
                 ))}
               <NavigLinkLi>
                 {this.props.objOfContentList.previous && (
-                  <button key={"Previous"} onClick={() => this.props.getFields("objOfContentList", this.props.objOfContentList.previous)}>
+                  <LinkPages
+                    key={"Previous"}
+                    to={{
+                      //pathname: this.props.objOfContentList.previous.slice(this.props.appUrl.length, this.props.objOfContentList.previous.indexOf("?")),
+                      search: this.props.objOfContentList.previous.slice(this.props.objOfContentList.previous.indexOf("?"))
+                    }}
+                    onClick={() => this.getUpdate(this.props.objOfContentList.previous)}
+                  >
                     Previous
-                  </button>
+                  </LinkPages>
                 )}
                 {this.props.objOfContentList.next && (
-                  <button key={"Next"} onClick={() => this.props.getFields("objOfContentList", this.props.objOfContentList.next)}>
+                  <LinkPages
+                    key={"Next"}
+                    to={{
+                      //pathname: this.props.objOfContentList.next.slice(this.props.appUrl.length, this.props.objOfContentList.next.indexOf("?")),
+                      search: this.props.objOfContentList.next.slice(this.props.objOfContentList.next.indexOf("?"))
+                    }}
+                    onClick={() => this.getUpdate(this.props.objOfContentList.next)}
+                  >
                     Next
-                  </button>
+                  </LinkPages>
                 )}
               </NavigLinkLi>
             </ListContent>
             <Info>{this.props.objOfContentField}</Info>
           </>
         )}
-      </ContentDiv>
+      </>
     );
   }
 }
