@@ -2,6 +2,22 @@ import React from "react";
 import styled from "styled-components";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
+const arrOffieldNotForDisplay = [
+  "homeworld",
+  "people",
+  "films",
+  "species",
+  "vehicles",
+  "starships",
+  "created",
+  "edited",
+  "url",
+  "characters",
+  "planets",
+  "residents",
+  "pilots"
+];
+
 const ListContent = styled.ul`
   display: flex;
   flex-direction: column;
@@ -11,22 +27,6 @@ const ListContent = styled.ul`
     margin: 0 10px;
     display: flex;
     align-items: center;
-    button {
-      cursor: pointer;
-      height: inherit;
-      display: flex;
-      align-items: center;
-      background-color: #255070cc;
-      text-align: center;
-      padding: 0 10px;
-      width: 100%;
-      border: none;
-      color: #000;
-    }
-    button:hover {
-      background-color: #505050;
-      color: #00a4ff;
-    }
   }
 `;
 const NavigLinkLi = styled.li`
@@ -34,6 +34,7 @@ const NavigLinkLi = styled.li`
 `;
 const LinkPages = styled(Link)`
   cursor: pointer;
+  text-decoration: none;
   height: inherit;
   display: flex;
   align-items: center;
@@ -71,7 +72,21 @@ const Info = styled.table`
 `;
 
 class Content extends React.Component {
-  getUpdate = async url => await this.props.getFields("objOfContentList", url);
+  fillContentField = (obj = null) => {
+    let result = [];
+    if (typeof obj !== "object") return;
+    for (const key in obj) {
+      if (arrOffieldNotForDisplay.indexOf(key) === -1)
+        result.push(
+          <tr key={key}>
+            <th style={{ maxWidth: "200px" }}>{key.replace(/_/gi, " ").toUpperCase()}</th>
+            <th>{obj[key]}</th>
+          </tr>
+        );
+    }
+
+    return result;
+  };
   render() {
     return (
       <>
@@ -79,11 +94,16 @@ class Content extends React.Component {
           <>
             <ListContent>
               {this.props.objOfContentList.results !== undefined &&
-                this.props.objOfContentList.results.map(obj => (
-                  <li>
-                    <button key={obj.name || obj.title} onClick={() => this.props.fillContentField(obj)}>
+                this.props.objOfContentList.results.map((obj, index) => (
+                  <li key={obj.name || obj.title}>
+                    <LinkPages
+                      to={{
+                        search: this.props.search,
+                        hash: `#${index + 10 * (this.props.search ? this.props.search.split("=")[1] - 1 : 0)}`
+                      }}
+                    >
                       {obj.name || obj.title}
-                    </button>
+                    </LinkPages>
                   </li>
                 ))}
               <NavigLinkLi>
@@ -91,10 +111,8 @@ class Content extends React.Component {
                   <LinkPages
                     key={"Previous"}
                     to={{
-                      //pathname: this.props.objOfContentList.previous.slice(this.props.appUrl.length, this.props.objOfContentList.previous.indexOf("?")),
                       search: this.props.objOfContentList.previous.slice(this.props.objOfContentList.previous.indexOf("?"))
                     }}
-                    onClick={() => this.getUpdate(this.props.objOfContentList.previous)}
                   >
                     Previous
                   </LinkPages>
@@ -103,17 +121,17 @@ class Content extends React.Component {
                   <LinkPages
                     key={"Next"}
                     to={{
-                      //pathname: this.props.objOfContentList.next.slice(this.props.appUrl.length, this.props.objOfContentList.next.indexOf("?")),
                       search: this.props.objOfContentList.next.slice(this.props.objOfContentList.next.indexOf("?"))
                     }}
-                    onClick={() => this.getUpdate(this.props.objOfContentList.next)}
                   >
                     Next
                   </LinkPages>
                 )}
               </NavigLinkLi>
             </ListContent>
-            <Info>{this.props.objOfContentField}</Info>
+            <Info>
+              <tbody>{this.fillContentField(this.props.objOfContentField)}</tbody>
+            </Info>
           </>
         )}
       </>

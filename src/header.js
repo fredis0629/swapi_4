@@ -11,12 +11,13 @@ const Hed = styled.header`
 `;
 const LinkStyled = styled(Link)`
   cursor: pointer;
+  text-decoration: none;
   height: 100%;
   text-align: center;
   display: flex;
   align-items: center;
-  background-color: ${props => (props.isActive ? "#f0f0f0" : "#000")};
-  color: ${props => (props.isActive ? "#000" : "#fff")};
+  background-color: ${props => (props.isactive ? "#f0f0f0" : "#000")};
+  color: ${props => (props.isactive ? "#000" : "#fff")};
   padding: 0 10px;
   border: none;
   &:hover {
@@ -29,15 +30,11 @@ class Header extends React.Component {
   render() {
     return (
       <Hed>
+        <LinkStyled key="Home" to={``} isactive={"Home" === this.props.active ? "active" : ""} onClick={() => this.props.changeActive("Home")}>
+          Home
+        </LinkStyled>
         {Object.keys(this.props.objOfHeaderField).map(val => (
-          <LinkStyled
-            key={val}
-            to={`/${val}`}
-            isActive={val === this.props.active}
-            onClick={() => {
-              this.props.changeActive(val);
-            }}
-          >
+          <LinkStyled key={val} to={`/${val}`} isactive={val === this.props.active ? "active" : ""}>
             {val}
           </LinkStyled>
         ))}

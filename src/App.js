@@ -2,24 +2,8 @@ import React from "react";
 import Header from "./header.js";
 import Content from "./content.js";
 import Footer from "./footer.js";
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import styled from "styled-components";
-
-const arrOffieldNotForDisplay = [
-  "homeworld",
-  "people",
-  "films",
-  "species",
-  "vehicles",
-  "starships",
-  "created",
-  "edited",
-  "url",
-  "characters",
-  "planets",
-  "residents",
-  "pilots"
-];
 
 const ContentDiv = styled.div`
   height: calc(100vh - 100px);
@@ -36,6 +20,7 @@ class App extends React.Component {
   constructor() {
     super();
     this.getFields("objOfHeaderField");
+    this.getFields("films", "https://swapi.co/api/films/");
   }
   state = {
     appUrl: "https://swapi.co/api/",
@@ -44,73 +29,74 @@ class App extends React.Component {
       results: []
     },
     additionalInformation: {},
-    objOfContentField: [],
+    objOfContentField: {},
     contentHide: true,
     active: "",
-    search: ""
+    search: "",
+    hash: "",
+    currentUrl: "",
+    films: {}
   };
-  getFields = (stateField, url) => {
-    this.getFetch(url).then(val => this.setState(() => ({ [stateField]: val })));
+  getFields = (stateField, url = this.state.appUrl) => {
+    if (this.state.currentUrl !== url) {
+      this.setState({ currentUrl: url });
+      this.getFetch(url).then(val => this.setState(() => ({ [stateField]: val })));
+    }
   };
   getFetch = async (url = this.state.appUrl) => {
     const fetchResponce = await fetch(url);
     if (!fetchResponce.ok) throw Error(`Fetch request error ${fetchResponce.status}: ${fetchResponce.statusText}`);
     return await fetchResponce.json();
   };
-  fillContentField = obj => {
-    let result = [];
-    for (const key in obj) {
-      if (arrOffieldNotForDisplay.indexOf(key) === -1)
-        result.push(
-          <tr key={key}>
-            <th style={{ "max-width": "200px" }}>{key.replace(/_/gi, " ").toUpperCase()}</th>
-            <th>{obj[key]}</th>
-          </tr>
-        );
-    }
-    this.setState({ objOfContentField: result });
-  };
   hideAll = () => {
-    this.setState(cur => ({ objOfContentField: [], contentHide: !cur.contentHide }));
+    this.setState(cur => ({ contentHide: !cur.contentHide }));
   };
-  getUpdate = async () => await this.getFields("objOfContentList", this.state.objOfHeaderField[this.state.active]);
-  changeActive = val => {
-    this.setState({ active: val });
-    this.getFields("objOfContentList", `${this.state.appUrl + this.state.active}/${val}`);
+  updateChanges = (active = "", search = "", hash = "") => {
+    this.setState({ active, search, hash });
+    active === "films"
+      ? this.setState(cur => {
+          return { objOfContentList: cur.films };
+        })
+      : this.getFields("objOfContentList", `${this.state.appUrl + active}/${search}`);
+    this.updateHashChanges(hash);
   };
-  changeSearch = val => {
-    this.setState({ search: val });
-    this.getFields("objOfContentList", `${this.state.appUrl + this.state.active}/${val}`);
+  getNumber = (hash = 0) => {
+    return +hash.slice(1) - 10 * (this.state.search ? this.state.search.split("=")[1] - 1 : 0);
   };
-  changeUpdading = (active = "", search = "") => {
-    this.setState({ active: active, search: search });
-    this.getFields("objOfContentList", `${this.state.appUrl + active}/${search}`);
+  updateHashChanges = (hash = "") => {
+    this.setState({ hash: hash });
+    hash ? this.setState({ objOfContentField: this.state.objOfContentList.results[this.getNumber(hash)] }) : this.setState({ objOfContentField: {} });
+  };
+  changeActive = active => {
+    this.setState({ active });
   };
   render() {
     return (
       <Router>
-        <Header objOfHeaderField={this.state.objOfHeaderField} getFields={this.getFields} active={this.state.active} changeActive={this.changeActive} />
+        <Header objOfHeaderField={this.state.objOfHeaderField} active={this.state.active} changeActive={this.changeActive} />
         <ContentDiv>
           <Route
             exact
             path="/:id"
             render={({ match, ...rest }) => {
               if ((match && match.params.id !== this.state.active) || (rest && rest.location.search !== this.state.search)) {
-                this.changeUpdading(match && match.params.id, rest && rest.location.search);
-              } else if ((match === null && this.state.active !== "") || (rest && rest.location.search !== this.state.search)) {
-                this.changeUpdading();
+                this.updateChanges(match && match.params.id, rest && rest.location.search, rest && rest.location.hash);
+              } else if (
+                rest &&
+                (rest.location.hash !== this.state.hash ||
+                  (rest.location.hash &&
+                    this.state.objOfContentList.results[this.getNumber(rest.location.hash)] &&
+                    (!this.state.objOfContentField ||
+                      this.state.objOfContentList.results[this.getNumber(rest.location.hash)].url !== this.state.objOfContentField.url)))
+              ) {
+                this.updateHashChanges(rest.location.hash);
               }
               return (
                 <Content
-                  match={match}
-                  rest={rest}
-                  appUrl={this.state.appUrl}
-                  objOfHeaderField={this.state.objOfHeaderField}
+                  search={this.state.search}
                   objOfContentList={this.state.objOfContentList}
-                  getFields={this.getFields}
                   contentHide={this.state.contentHide}
                   objOfContentField={this.state.objOfContentField}
-                  fillContentField={this.fillContentField}
                 />
               );
             }}
