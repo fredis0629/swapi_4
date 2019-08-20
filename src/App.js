@@ -100,11 +100,6 @@ class App extends React.Component {
               } else if ((match === null && this.state.active !== "") || (rest && rest.location.search !== this.state.search)) {
                 this.changeUpdading();
               }
-              // if (rest && rest.location.search !== this.state.search) {
-              //   this.changeSearch(rest.location.search);
-              // } else if (rest === null && this.state.search !== "") {
-              //   this.changeSearch("");
-              // }
               return (
                 <Content
                   match={match}
