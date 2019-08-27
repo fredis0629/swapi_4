@@ -30,7 +30,7 @@ class Header extends React.Component {
   render() {
     return (
       <Hed>
-        <LinkStyled key="Home" to={``} isactive={"Home" === this.props.active ? "active" : ""} onClick={() => this.props.changeActive("Home")}>
+        <LinkStyled key="Home" to={``} isactive={`` === this.props.active ? "active" : ""}>
           Home
         </LinkStyled>
         {Object.keys(this.props.objOfHeaderField).map(val => (

@@ -17,88 +17,42 @@ const ContentDiv = styled.div`
 `;
 
 class App extends React.Component {
-  constructor() {
-    super();
+  componentDidMount() {
     this.getFields("objOfHeaderField");
     this.getFields("films", "https://swapi.co/api/films/");
   }
   state = {
     appUrl: "https://swapi.co/api/",
     objOfHeaderField: {},
-    objOfContentList: {
-      results: []
-    },
-    additionalInformation: {},
-    objOfContentField: {},
     contentHide: true,
-    active: "",
-    search: "",
-    hash: "",
-    currentUrl: "",
     films: {}
   };
   getFields = (stateField, url = this.state.appUrl) => {
-    if (this.state.currentUrl !== url) {
-      this.setState({ currentUrl: url });
-      this.getFetch(url).then(val => this.setState(() => ({ [stateField]: val })));
-    }
+    this.getFetch(url).then(val => this.setState(() => ({ [stateField]: val })));
   };
   getFetch = async (url = this.state.appUrl) => {
     const fetchResponce = await fetch(url);
-    if (!fetchResponce.ok) throw Error(`Fetch request error ${fetchResponce.status}: ${fetchResponce.statusText}`);
+    if (!fetchResponce.ok) throw Error(`Fetch request error ${fetchResponce.status}: ${fetchResponce.statusText}, ${fetchResponce.url}`);
     return await fetchResponce.json();
   };
   hideAll = () => {
     this.setState(cur => ({ contentHide: !cur.contentHide }));
   };
-  updateChanges = (active = "", search = "", hash = "") => {
-    this.setState({ active, search, hash });
-    active === "films"
-      ? this.setState(cur => {
-          return { objOfContentList: cur.films };
-        })
-      : this.getFields("objOfContentList", `${this.state.appUrl + active}/${search}`);
-    this.updateHashChanges(hash);
-  };
-  getNumber = (hash = 0) => {
-    return +hash.slice(1) - 10 * (this.state.search ? this.state.search.split("=")[1] - 1 : 0);
-  };
-  updateHashChanges = (hash = "") => {
-    this.setState({ hash: hash });
-    hash ? this.setState({ objOfContentField: this.state.objOfContentList.results[this.getNumber(hash)] }) : this.setState({ objOfContentField: {} });
-  };
-  changeActive = active => {
-    this.setState({ active });
-  };
   render() {
     return (
       <Router>
-        <Header objOfHeaderField={this.state.objOfHeaderField} active={this.state.active} changeActive={this.changeActive} />
+        <Route
+          path="/:id"
+          children={({ match }) => {
+            return <Header objOfHeaderField={this.state.objOfHeaderField} active={match ? match.params.id : ""} />;
+          }}
+        />
         <ContentDiv>
           <Route
             exact
             path="/:id"
-            render={({ match, ...rest }) => {
-              if ((match && match.params.id !== this.state.active) || (rest && rest.location.search !== this.state.search)) {
-                this.updateChanges(match && match.params.id, rest && rest.location.search, rest && rest.location.hash);
-              } else if (
-                rest &&
-                (rest.location.hash !== this.state.hash ||
-                  (rest.location.hash &&
-                    this.state.objOfContentList.results[this.getNumber(rest.location.hash)] &&
-                    (!this.state.objOfContentField ||
-                      this.state.objOfContentList.results[this.getNumber(rest.location.hash)].url !== this.state.objOfContentField.url)))
-              ) {
-                this.updateHashChanges(rest.location.hash);
-              }
-              return (
-                <Content
-                  search={this.state.search}
-                  objOfContentList={this.state.objOfContentList}
-                  contentHide={this.state.contentHide}
-                  objOfContentField={this.state.objOfContentField}
-                />
-              );
+            children={({ match, ...rest }) => {
+              return <Content films={this.state.films.results} appUrl={this.state.appUrl} contentHide={this.state.contentHide} match={match} rest={rest} />;
             }}
           />
         </ContentDiv>
