@@ -42,16 +42,15 @@ class App extends React.Component {
     return (
       <Router>
         <Route
-          path="/:id"
-          children={({ match }) => {
-            return <Header objOfHeaderField={this.state.objOfHeaderField} active={match ? match.params.id : ""} />;
+          children={({ match, location }) => {
+            return <Header objOfHeaderField={this.state.objOfHeaderField} active={location ? location.pathname.slice(1) : ""} />;
           }}
         />
         <ContentDiv>
           <Route
             exact
             path="/:id"
-            children={({ match, ...rest }) => {
+            render={({ match, ...rest }) => {
               return <Content films={this.state.films.results} appUrl={this.state.appUrl} contentHide={this.state.contentHide} match={match} rest={rest} />;
             }}
           />

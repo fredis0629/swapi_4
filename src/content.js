@@ -104,11 +104,12 @@ class Content extends React.Component {
   getFields = (stateField, url = this.state.appUrl) => {
     if (!stateField) {
       this.setState({ objOfContentField: {}, objOfContentList: { results: [] }, currentUrl: "" });
-    } else if (this.state.currentUrl !== url) {
+    } else if (this.state.loadingUrl !== url && this.state.currentUrl !== url) {
+      this.setState({ loadingUrl: url });
       url === "https://swapi.co/api/films/"
         ? this.props.films && this.setState(() => ({ [stateField]: { results: this.props.films }, currentUrl: "https://swapi.co/api/films/" }))
         : this.getFetch(url).then(val =>
-            this.setState(cur => {
+            this.setState(() => {
               let result = {};
               result[stateField] = val;
               if (stateField !== "species") result["currentUrl"] = url;
@@ -130,6 +131,7 @@ class Content extends React.Component {
   state = {
     species: {},
     currentUrl: "",
+    loadingUrl: "",
     showSpecies: false,
     objOfContentList: {
       results: []
@@ -138,7 +140,10 @@ class Content extends React.Component {
   };
   getSpecies = obj => {
     let result = [];
-    if (obj.species[0] !== this.state.species.url) this.getFields("species", obj.species[0]);
+    if (obj.species[0] !== this.state.species.url) {
+      this.setState({ species: "", showSpecies: false });
+      this.getFields("species", obj.species[0]);
+    }
     result.push(
       <tr key={"species"}>
         <td style={{ maxWidth: "200px" }}>{"species".toUpperCase()}</td>
@@ -233,6 +238,19 @@ class Content extends React.Component {
     }
     return result;
   }
+  // UNSAFE_componentWillUpdate(nextProps) {
+  //   nextProps.match
+  //     ? this.getFields("objOfContentList", `${nextProps.appUrl + nextProps.match.params.id}/${nextProps.rest.location.search}`)
+  //     : this.getFields();
+  // }
+  // componentDidMount() {
+  //   this.props.match
+  //     ? this.getFields("objOfContentList", `${this.props.appUrl + this.props.match.params.id}/${this.props.rest.location.search}`)
+  //     : this.getFields();
+  // }
+  // static getDerivedStateFromProps(nextProps, prevState){
+
+  // }
   render() {
     this.props.match
       ? this.getFields("objOfContentList", `${this.props.appUrl + this.props.match.params.id}/${this.props.rest.location.search}`)
