@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Hed = styled.header`
   display: flex;
@@ -30,11 +30,16 @@ class Header extends React.Component {
   render() {
     return (
       <Hed>
-        <LinkStyled key="Home" to={``} isactive={`` === this.props.active ? "active" : ""}>
+        <LinkStyled key="Home" to={``} isactive={`` === this.props.active ? "active" : ""} onClick={() => this.props.getFields()}>
           Home
         </LinkStyled>
         {Object.keys(this.props.objOfHeaderField).map(val => (
-          <LinkStyled key={val} to={`/${val}`} isactive={val === this.props.active ? "active" : ""}>
+          <LinkStyled
+            key={val}
+            to={`/${val}`}
+            onClick={() => this.props.getFields("contentListObj", `${this.props.apiUrl}${val}/`)}
+            isactive={val === this.props.active ? "active" : ""}
+          >
             {val}
           </LinkStyled>
         ))}
