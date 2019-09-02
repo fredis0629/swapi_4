@@ -1,11 +1,12 @@
 import React from "react";
 import styled from "styled-components";
+import backgroundImage from "../image/storming-troopers1.jpg";
 
 const ContentDiv = styled.div`
   height: calc(100vh - 100px);
   margin: 0;
   display: flex;
-  background: url(https://www.weekendnotes.com/im/002/05/storming-troopers1.jpg);
+  background: url(${backgroundImage});
   background-size: 100% 100%;
   color: white;
   font-size: 5em;

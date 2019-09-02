@@ -34,12 +34,7 @@ class Header extends React.Component {
           Home
         </LinkStyled>
         {Object.keys(this.props.objOfHeaderField).map(val => (
-          <LinkStyled
-            key={val}
-            to={`/${val}`}
-            onClick={() => this.props.getFields("contentListObj", `${this.props.apiUrl}${val}/`)}
-            isactive={val === this.props.active ? "active" : ""}
-          >
+          <LinkStyled key={val} to={`/${val}`} isactive={val === this.props.active ? "active" : ""}>
             {val}
           </LinkStyled>
         ))}

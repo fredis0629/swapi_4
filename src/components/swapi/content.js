@@ -1,12 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import backgroundImage from "../../image/storming-troopers1.jpg";
 
 const ContentDiv = styled.div`
   height: calc(100vh - 100px);
   margin: 0;
   display: flex;
-  background: url(https://www.weekendnotes.com/im/002/05/storming-troopers1.jpg);
+  background-image: url(${backgroundImage});
   background-size: 100% 100%;
   ul {
     height: 100%;
@@ -125,7 +126,6 @@ class Content extends React.Component {
     );
   };
   render() {
-    // this.props.match ? this.getFields("contentListObj", `${this.props.appUrl + this.props.match.params.id}/${this.props.location.search}`) : this.getFields();
     const search = this.props.location.search;
     const hash = this.props.location.hash;
     return (
@@ -143,7 +143,6 @@ class Content extends React.Component {
                         search: search,
                         hash: `#${index + 10 * (search ? search.split("=")[1] - 1 : 0)}`
                       }}
-                      onClick={() => this.props.getContent(obj)}
                     >
                       {obj.name || obj.title}
                     </LinkPages>
@@ -156,7 +155,6 @@ class Content extends React.Component {
                     to={{
                       search: this.props.contentListObj.previous.slice(this.props.contentListObj.previous.indexOf("?"))
                     }}
-                    onClick={() => this.props.getFields("contentListObj", this.props.contentListObj.previous)}
                   >
                     Previous
                   </LinkPages>
@@ -167,7 +165,6 @@ class Content extends React.Component {
                     to={{
                       search: this.props.contentListObj.next.slice(this.props.contentListObj.next.indexOf("?"))
                     }}
-                    onClick={() => this.props.getFields("contentListObj", this.props.contentListObj.next)}
                   >
                     Next
                   </LinkPages>

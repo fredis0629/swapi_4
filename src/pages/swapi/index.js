@@ -37,34 +37,63 @@ const LinkFromAttribute = styled(Link)`
 `;
 
 class Swapi extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     this.getFields("objOfHeaderField");
     this.getFields("films", "https://swapi.co/api/films/");
+    if (this.state.routeUrl && this.state.routeUrl.includes(this.props.location.pathname)) {
+      if (this.props.match.params.id) {
+        this.getFields("contentListObj", `${this.state.apiUrl}${this.props.location.pathname.slice(1)}/${this.props.location.search}`);
+      }
+    }
+    if (this.props.location.hash) this.getContent(this.state.contentListObj.results[this.getNumber(this.props.location.hash, this.props.location.search)]);
+  }
+  componentDidUpdate(prevProps) {
+    const { hash, search, pathname } = this.props.location;
+    if (
+      search !== prevProps.location.search ||
+      (this.state.routeUrl &&
+        this.state.routeUrl.includes(pathname) &&
+        (pathname !== prevProps.location.pathname || (this.props.match.params.id && this.state.contentListObj.results.length === 0)))
+    ) {
+      this.props.match.params.id ? this.getFields("contentListObj", `${this.state.apiUrl}${pathname.slice(1)}/${search}`) : this.getFields();
+    } else if (hash !== prevProps.location.hash) {
+      hash ? this.getContent(this.state.contentListObj.results[this.getNumber(hash, search)]) : this.getContent();
+    }
   }
   getFields = (stateField, url = this.state.apiUrl) => {
     if (!stateField) {
       this.setState({ contentFieldObj: [], species: {}, contentListObj: { results: [] }, currentUrl: "", speciesUrl: "" });
-    } else if (this.state.loadingUrl !== url && this.state.currentUrl !== url) {
+    } else if ((this.state.loadingUrl !== url || stateField === "species") && this.state.currentUrl !== url) {
       stateField !== "films" && this.setState({ loadingUrl: url, species: {}, speciesUrl: "" });
       stateField === "contentListObj" && this.setState({ contentFieldObj: [] });
-      url === "https://swapi.co/api/films/" && stateField !== "films"
-        ? this.state.films.results && this.setState(() => ({ [stateField]: this.state.films, currentUrl: "https://swapi.co/api/films/" }))
-        : this.getFetch(url).then(val =>
-            this.setState(() => {
-              let result = {};
-              result[stateField] = val;
-              if (stateField !== "species" && stateField !== "films") result["currentUrl"] = url;
-              if (stateField === "objOfHeaderField")
-                result.routeUrl = Object.keys(val)
-                  .map(key => `/${key}`)
-                  .concat(["/"]);
-              return result;
-            })
-          );
+      if (url === "https://swapi.co/api/films/" && stateField !== "films") {
+        if (this.state.films.results) {
+          this.setState(() => ({ [stateField]: this.state.films, currentUrl: "https://swapi.co/api/films/" }));
+          this.props.location.hash
+            ? this.getContent(this.state.films.results[this.getNumber(this.props.location.hash, this.props.location.search)])
+            : this.getContent();
+        }
+      } else {
+        this.getFetch(url).then(val => {
+          this.setState(() => {
+            let result = {};
+            result[stateField] = val;
+            if (stateField !== "species" && stateField !== "films") {
+              result["currentUrl"] = url;
+            } else {
+              result["speciesUrl"] = url;
+            }
+            if (stateField === "objOfHeaderField")
+              result.routeUrl = Object.keys(val)
+                .map(key => `/${key}`)
+                .concat(["/"]);
+            return result;
+          });
+          if (stateField === "contentListObj") {
+            this.props.location.hash ? this.getContent(val.results[this.getNumber(this.props.location.hash, this.props.location.search)]) : this.getContent();
+          }
+        });
+      }
     }
   };
   getFetch = async (url = this.state.apiUrl) => {
@@ -88,13 +117,13 @@ class Swapi extends React.Component {
     showSpecies: false
   };
   hideAll = () => {
-    this.setState(cur => ({ contentHide: !cur.contentHide }));
+    this.setState(cur => ({ contentHide: !cur.contentHide, contentFieldObj: [] }));
   };
   getNumber = (hash = 0, search) => {
     return +hash.slice(1) - 10 * (search ? search.split("=")[1] - 1 : 0);
   };
   getSpecies = obj => {
-    if (obj.species[0] !== this.state.speciesUrl) {
+    if (obj.species[0] !== this.state.speciesUrl || !this.state.species.url) {
       this.setState({ species: {}, showSpecies: false, speciesUrl: obj.species[0] });
       this.getFields("species", obj.species[0]);
     }
@@ -105,8 +134,9 @@ class Swapi extends React.Component {
         <td style={{ maxWidth: "200px" }}>{"films:".toUpperCase()}</td>
         <FilmsContainer>
           {this.state.films.results.map((filmProps, index) => {
+            let result;
             if (obj.films.indexOf(filmProps.url) !== -1) {
-              return (
+              result = (
                 <LinkFromAttribute
                   key={filmProps.title}
                   to={{
@@ -123,6 +153,7 @@ class Swapi extends React.Component {
                 </LinkFromAttribute>
               );
             }
+            return result;
           })}
         </FilmsContainer>
       </tr>
@@ -143,12 +174,11 @@ class Swapi extends React.Component {
     obj.films && this.state.films.results && result.push(this.getFilms(obj));
     if (obj.url.includes("people")) {
       this.getSpecies(obj);
-    } else if (!obj.url.includes("species")) {
-      this.setState({ species: {} });
     }
     return result;
   };
   getContent = obj => {
+    this.setState({ showSpecies: false });
     const result = this.fillContentField(obj);
     this.setState({ contentFieldObj: result });
   };
@@ -157,27 +187,7 @@ class Swapi extends React.Component {
       return { showSpecies: !cur.showSpecies };
     });
   };
-  // static getDerivedStateFromProps(nextProps, prevState) {
-  //   console.log(this);
-  //   console.log(nextProps);
-  //   console.log(prevState);
 
-  //   let result = {};
-  //   if (nextProps.location && prevState.routeUrl && prevState.routeUrl.includes(nextProps.location.pathname)) {
-  //     if (!nextProps.match.params) {
-  //       result = {
-  //         contentListObj: {
-  //           results: []
-  //         },
-  //         contentFieldObj: {}
-  //       };
-  //     } else if (nextProps.location.pathname !== this.props.location.pathname || nextProps.location.search !== this.props.location.search) {
-  //       result.contentListObj = this.getFetch(`${this.state.apiUrl}`);
-  //     }
-  //   }
-
-  //   return result;
-  // }
   render() {
     return (
       <>
