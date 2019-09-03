@@ -83,29 +83,6 @@ const ButtonToAddAttribute = styled.button`
 `;
 
 class Content extends React.Component {
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   let result = false;
-  //   if ((nextProps.match && !this.props.match) || (!nextProps.match && this.props.match) || (nextProps.match && !nextState.currentUrl)) {
-  //     result = true;
-  //   } else if (
-  //     nextState.currentUrl !== this.state.currentUrl ||
-  //     nextState.objOfContentField.url !== this.state.objOfContentField.url ||
-  //     (nextState.species && nextState.species.url !== this.state.species.url) ||
-  //     nextState.showSpecies !== this.state.showSpecies ||
-  //     nextProps.contentHide !== this.props.contentHide ||
-  //     (nextState.films && !this.state.films)
-  //   ) {
-  //     result = true;
-  //   } else if (
-  //     (nextProps.match && nextProps.match.params.id !== this.props.match.params.id) ||
-  //     (nextProps.location && nextProps.location.search !== this.props.location.search) ||
-  //     nextProps.location.hash !== this.props.location.hash ||
-  //     (nextProps.location.hash && !this.state.objOfContentField)
-  //   ) {
-  //     result = true;
-  //   }
-  //   return result;
-  // }
   getSpecies = () => {
     return (
       <tr key={"species"}>

@@ -4,7 +4,8 @@ import Content from "../../components/swapi/content.js";
 import Footer from "../../components/swapi/footer.js";
 import NoMatch from "../../components/index404.js";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Route, Link } from "react-router-dom";
+import { Switch } from "react-router";
 
 const arrOffieldNotForDisplay = [
   "homeworld",
@@ -38,28 +39,27 @@ const LinkFromAttribute = styled(Link)`
 
 class Swapi extends React.Component {
   componentDidMount() {
-    this.getFields("objOfHeaderField");
     this.getFields("films", "https://swapi.co/api/films/");
-    if (this.state.routeUrl && this.state.routeUrl.includes(this.props.location.pathname)) {
-      if (this.props.match.params.id) {
+    if (this.state.routerPath && this.state.routerPath.includes(this.props.location.pathname)) {
+      if (this.props.location.pathname.length > 1) {
         this.getFields("contentListObj", `${this.state.apiUrl}${this.props.location.pathname.slice(1)}/${this.props.location.search}`);
       }
     }
     if (this.props.location.hash) this.getContent(this.state.contentListObj.results[this.getNumber(this.props.location.hash, this.props.location.search)]);
   }
-  componentDidUpdate(prevProps) {
-    const { hash, search, pathname } = this.props.location;
-    if (
-      search !== prevProps.location.search ||
-      (this.state.routeUrl &&
-        this.state.routeUrl.includes(pathname) &&
-        (pathname !== prevProps.location.pathname || (this.props.match.params.id && this.state.contentListObj.results.length === 0)))
-    ) {
-      this.props.match.params.id ? this.getFields("contentListObj", `${this.state.apiUrl}${pathname.slice(1)}/${search}`) : this.getFields();
-    } else if (hash !== prevProps.location.hash) {
-      hash ? this.getContent(this.state.contentListObj.results[this.getNumber(hash, search)]) : this.getContent();
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   const { hash, search, pathname } = this.props.location;
+  //   if (
+  //     search !== prevProps.location.search ||
+  //     (this.state.routerPath &&
+  //       this.state.routerPath.includes(pathname) &&
+  //       (pathname !== prevProps.location.pathname || (this.props.location.pathname.length > 1 && this.state.contentListObj.results.length === 0)))
+  //   ) {
+  //     this.props.location.pathname.length > 1 ? this.getFields("contentListObj", `${this.state.apiUrl}${pathname.slice(1)}/${search}`) : this.getFields();
+  //   } else if (hash !== prevProps.location.hash) {
+  //     hash ? this.getContent(this.state.contentListObj.results[this.getNumber(hash, search)]) : this.getContent();
+  //   }
+  // }
   getFields = (stateField, url = this.state.apiUrl) => {
     if (!stateField) {
       this.setState({ contentFieldObj: [], species: {}, contentListObj: { results: [] }, currentUrl: "", speciesUrl: "" });
@@ -83,10 +83,6 @@ class Swapi extends React.Component {
             } else {
               result["speciesUrl"] = url;
             }
-            if (stateField === "objOfHeaderField")
-              result.routeUrl = Object.keys(val)
-                .map(key => `/${key}`)
-                .concat(["/"]);
             return result;
           });
           if (stateField === "contentListObj") {
@@ -103,10 +99,20 @@ class Swapi extends React.Component {
   };
   state = {
     apiUrl: "https://swapi.co/api/",
-    routeUrl: "",
+    routePath: ["/people", "/planets", "/films", "/species", "/vehicles", "/starships"],
     currentUrl: "",
     loadingUrl: "",
-    objOfHeaderField: {},
+    objOfHeaderField: {
+      people: {
+        url: "https://swapi.co/api/people/",
+        count: 87
+      },
+      planets: { url: "https://swapi.co/api/planets/", count: 61 },
+      films: { url: "https://swapi.co/api/films/", count: 7 },
+      species: { url: "https://swapi.co/api/species/", count: 37 },
+      vehicles: { url: "https://swapi.co/api/vehicles/", count: 39 },
+      starships: { url: "https://swapi.co/api/starships/", count: 37 }
+    },
     contentListObj: {
       results: []
     },
@@ -197,25 +203,37 @@ class Swapi extends React.Component {
           getFields={this.getFields}
           apiUrl={this.state.apiUrl}
         />
-        {this.state.routeUrl && !this.state.routeUrl.includes(this.props.location.pathname) ? (
-          <NoMatch />
-        ) : (
-          <Content
-            match={this.props.match}
-            location={this.props.location}
-            films={this.state.films.results}
-            apiUrl={this.state.apiUrl}
-            contentHide={this.state.contentHide}
-            contentListObj={this.state.contentListObj}
-            contentFieldObj={this.state.contentFieldObj}
-            showSpecies={this.state.showSpecies}
-            species={this.state.species}
-            fillContentField={this.fillContentField}
-            getContent={this.getContent}
-            viewSpecies={this.viewSpecies}
-            getFields={this.getFields}
-          />
-        )}
+        <>
+          <Switch>
+            {[
+              <Route key={`/swapi`} exact sensitive path="/swapi" render={() => <div>Welcome</div>} />,
+              ...this.state.routePath.map(val => (
+                <Route
+                  key={`/swapi${val}`}
+                  path={`/swapi${val}`}
+                  render={() => (
+                    <Content
+                      films={this.state.films.results}
+                      location={this.props.location}
+                      apiUrl={this.state.objOfHeaderField[val.slice(1)].url}
+                      elementCount={this.state.objOfHeaderField[val.slice(1)].count}
+                      contentHide={this.state.contentHide}
+                      contentListObj={this.state.contentListObj}
+                      contentFieldObj={this.state.contentFieldObj}
+                      showSpecies={this.state.showSpecies}
+                      species={this.state.species}
+                      fillContentField={this.fillContentField}
+                      getContent={this.getContent}
+                      viewSpecies={this.viewSpecies}
+                      getFields={this.getFields}
+                    />
+                  )}
+                />
+              )),
+              <Route key={`404`} component={NoMatch} />
+            ]}
+          </Switch>
+        </>
         <Footer hideAll={this.hideAll} contentHide={this.state.contentHide} />
       </>
     );

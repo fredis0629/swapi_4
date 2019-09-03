@@ -2,8 +2,8 @@ import React from "react";
 import styled from "styled-components";
 
 const FooterStyled = styled.footer`
-  display: flex;
-  bottom: 0;
+  position: inherit;
+  bottom: 50px;
   height: 50px;
   background-color: #000;
 `;
